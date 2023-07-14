@@ -1,25 +1,37 @@
 const mongoose = require('mongoose');
 
-const cardSchema = new mongoose.Shema({
+const cardSchema = new mongoose.Schema({
   name: {
     type: String,
-    require: true,
+    required: true,
     minlength: 2,
     maxlength: 30,
   },
   link: {
     type: String,
-    require: true,
+    required: true,
   },
   owner: {
     type: mongoose.ObjectId,
-    require: true,
+    required: true,
   },
-  likes: {
-    type: mongoose.ObjectId,
-    require: true,
-    default: [],
-  },
+  likes: [{
+    type: mongoose.ObjectId
+  }],
+  // likes2: {
+  //   type: [mongoose.ObjectId],
+  // },
+  // likes3: {
+  //   type: mongoose.Schema.Types.Array,
+  // },
+  // likes4: {
+  //   type: [
+  //     {
+  //       type: mongoose.ObjectId,
+  //       ref: 'user',
+  //     },
+  //   ],
+  // },
   createdAt: {
     type: Date,
     default: Date.now,

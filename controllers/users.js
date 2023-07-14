@@ -14,8 +14,8 @@ function getUsers(_req, res) {
 }
 
 function getUser(req, res) {
-  const { id } = req.params;
-  User.findById(id)
+  const { userId } = req.params;
+  User.findById(userId)
     .then((user) => {
       if (user !== null) {
         return res.status(OK_STATUS_CODE).send({ data: user });
@@ -35,8 +35,8 @@ function createUser(req, res) {
   User.create({ name, about, avatar })
     .then((user) => res.status(CREATED_STATUS_CODE).send({ data: user }))
     .catch((err) => {
-      if (err.errors.name.name === 'ValidatorError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка введенных данных', ...err });
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка во введенных данных', ...err });
       }
       return res
         .status(INTERNAL_SERVER_ERROR_STATUS_CODE)

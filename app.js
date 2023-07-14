@@ -14,14 +14,13 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 const app = express();
 
 app.use(express.json());
-app.use(router);
 app.use((req, res, next) => {
   req.user = {
-    _id: '64b128439a51a5026a724892'
+    _id: '64b128439a51a5026a724892',
   };
-
   next();
 });
+app.use(router);
 
 // eslint-disable-next-line no-console
 app.listen(PORT, () => console.log(`Application is running on port ${PORT}`));
