@@ -23,7 +23,10 @@ function getUser(req, res) {
       return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Пользователь с таким id не найден' });
     })
     .catch((err) => {
-      res
+      if (err.name === 'CastError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res
         .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
         .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
     });
@@ -67,7 +70,7 @@ function patchInfoUser(req, res) {
 function patchAvatarUser(req, res) {
   const userId = req.user._id;
   const { avatar } = req.body;
-  User.findByIdAndUpdate(userId, { avatar })
+  User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (avatar !== undefined) {
         return res.status(OK_STATUS_CODE).send({ data: user });

@@ -38,39 +38,54 @@ function deleteCard(req, res) {
       }
       return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
     })
-    .catch((err) => res
-      .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-      .send({ message: 'Ошибка на сервере, при запросе карточки', err }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+        .send({ message: 'Ошибка на сервере, при запросе карточки', err });
+    });
 }
 
 function putLike(req, res) {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { like: req.user._id } },
+    { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((like) => {
-      if (like !== null) {
-        return res.send({ message: 'Лайк добавлен ♡', data: like });
+    .then((likes) => {
+      if (likes !== null) {
+        return res.send({ message: 'Лайк добавлен ♡', data: likes });
       }
       return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
     })
-    .catch((err) => res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: 'Ошибка на сервере, при добавлении лайка', err }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: 'Ошибка на сервере, при добавлении лайка', err });
+    });
 }
 
 function deleteLike(req, res) {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $pull: { like: req.user._id } },
+    { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((like) => {
-      if (like !== null) {
-        return res.send({ message: 'Лайк удален ಠ_ಠ', data: like });
+    .then((likes) => {
+      if (likes !== null) {
+        return res.send({ message: 'Лайк удален ಠ_ಠ', data: likes });
       }
       return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
     })
-    .catch((err) => res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: 'Ошибка на сервере, при удалении лайка', err }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res.status(INTERNAL_SERVER_ERROR_STATUS_CODE).send({ message: 'Ошибка на сервере, при удалении лайка', err });
+    });
 }
 
 module.exports = {
