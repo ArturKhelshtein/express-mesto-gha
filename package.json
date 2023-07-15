@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "npx eslint .",
     "dev": "nodemon app.js",
-    "dev:inspect": "nodemon --inspect app.js"
+    "dev:inspect": "nodemon --inspect app.js",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "Artur Khelshtein",
