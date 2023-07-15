@@ -36,7 +36,7 @@ function createUser(req, res) {
     .then((user) => res.status(CREATED_STATUS_CODE).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка во введенных данных', ...err });
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
       }
       return res
         .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
@@ -44,8 +44,50 @@ function createUser(req, res) {
     });
 }
 
+function patchInfoUser(req, res) {
+  const userId = req.user._id;
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
+    .then((user) => {
+      if (name !== undefined && about !== undefined) {
+        return res.status(OK_STATUS_CODE).send({ data: user });
+      }
+      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, недостаточно данных' });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+    });
+}
+
+function patchAvatarUser(req, res) {
+  const userId = req.user._id;
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(userId, { avatar })
+    .then((user) => {
+      if (avatar !== undefined) {
+        return res.status(OK_STATUS_CODE).send({ data: user });
+      }
+      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, недостаточно данных' });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+    });
+}
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
+  patchInfoUser,
+  patchAvatarUser,
 };
