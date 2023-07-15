@@ -46,16 +46,15 @@ function createUser(req, res) {
     });
 }
 
+// eslint-disable-next-line consistent-return
 function patchInfoUser(req, res) {
   const userId = req.user._id;
   const { name, about } = req.body;
+  if (name === undefined || about === undefined) {
+    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, неверные данные' });
+  }
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
-    .then((user) => {
-      if (name !== undefined && about !== undefined) {
-        return res.status(OK_STATUS_CODE).send({ data: user });
-      }
-      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, недостаточно данных' });
-    })
+    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
@@ -66,16 +65,16 @@ function patchInfoUser(req, res) {
     });
 }
 
+// eslint-disable-next-line consistent-return
 function patchAvatarUser(req, res) {
   const userId = req.user._id;
   const { avatar } = req.body;
+  if (avatar === undefined) {
+    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, неверные данные' });
+  }
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
-    .then((user) => {
-      if (avatar !== undefined) {
-        return res.send({ data: user });
-      }
-      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, недостаточно данных' });
-    })
+    .orFail()
+    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
