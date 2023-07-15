@@ -32,13 +32,12 @@ function createCard(req, res) {
 function deleteCard(req, res) {
   const { cardId } = req.params;
   Card.findByIdAndDelete(cardId)
-    .then((card) => {
-      if (card !== null) {
-        return res.send({ message: 'Карточка удалена', data: card });
-      }
-      return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
-    })
+    .orFail(new Error('NotFoundId'))
+    .then((card) => res.send({ message: 'Карточка удалена', data: card }))
     .catch((err) => {
+      if (err.message === 'NotFoundId') {
+        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
+      }
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
       }
@@ -54,13 +53,12 @@ function putLike(req, res) {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((likes) => {
-      if (likes !== null) {
-        return res.send({ message: 'Лайк добавлен ♡', data: likes });
-      }
-      return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
-    })
+    .orFail(new Error('NotFoundId'))
+    .then((likes) => res.send({ message: 'Лайк добавлен ♡', data: likes }))
     .catch((err) => {
+      if (err.message === 'NotFoundId') {
+        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
+      }
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
       }
@@ -74,13 +72,12 @@ function deleteLike(req, res) {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((likes) => {
-      if (likes !== null) {
-        return res.send({ message: 'Лайк удален ಠ_ಠ', data: likes });
-      }
-      return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
-    })
+    .orFail(new Error('NotFoundId'))
+    .then((likes) => res.send({ message: 'Лайк удален ಠ_ಠ', data: likes }))
     .catch((err) => {
+      if (err.message === 'NotFoundId') {
+        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
+      }
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
       }

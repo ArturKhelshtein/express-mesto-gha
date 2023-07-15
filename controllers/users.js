@@ -16,13 +16,12 @@ function getUsers(_req, res) {
 function getUser(req, res) {
   const { userId } = req.params;
   User.findById(userId)
-    .then((user) => {
-      if (user !== null) {
-        return res.status(OK_STATUS_CODE).send({ data: user });
-      }
-      return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Пользователь с таким id не найден' });
-    })
+    .orFail(new Error('NotFoundId'))
+    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
     .catch((err) => {
+      if (err.message === 'NotFoundId') {
+        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Пользователь с таким id не найден' });
+      }
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
       }
@@ -73,7 +72,7 @@ function patchAvatarUser(req, res) {
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (avatar !== undefined) {
-        return res.status(OK_STATUS_CODE).send({ data: user });
+        return res.send({ data: user });
       }
       return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, недостаточно данных' });
     })
