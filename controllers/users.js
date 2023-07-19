@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const { OK_STATUS_CODE } = require('../utils/errors');
 const { CREATED_STATUS_CODE } = require('../utils/errors');
 const { BAD_REQUEST_STATUS_CODE } = require('../utils/errors');
@@ -31,20 +32,34 @@ function getUser(req, res) {
     });
 }
 
-function createUser(req, res) {
-  const { name, about, avatar } = req.body;
+const createUser = async (req, res) => {
+  if (!req.body) {
+    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка в теле запроса' });
+  }
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
 
-  User.create({ name, about, avatar })
-    .then((user) => res.status(CREATED_STATUS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при добавлении пользователя', err });
+  if (!email || !password) {
+    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка, не заполнено поле email или password' });
+  }
+
+  const hash = await bcrypt.hash(password, 10)
+
+  try {
+    const user = await User.create({
+      email, password: hash, name, about, avatar,
     });
-}
+    return res.status(CREATED_STATUS_CODE).send({ _id: user._id, email: user.email });
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+    }
+    return res
+      .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+      .send({ message: 'Ошибка на сервере, при добавлении пользователя' });
+  }
+};
 
 // eslint-disable-next-line consistent-return
 function patchInfoUser(req, res) {
@@ -85,10 +100,16 @@ function patchAvatarUser(req, res) {
     });
 }
 
+function login(req, res) {
+  const userId = req.user._id;
+  const { password } = req.user;
+}
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
   patchInfoUser,
   patchAvatarUser,
+  login,
 };
