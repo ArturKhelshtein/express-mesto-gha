@@ -1,140 +1,126 @@
 const bcrypt = require('bcryptjs');
-const {
-  OK_STATUS_CODE,
-  CREATED_STATUS_CODE,
-  BAD_REQUEST_STATUS_CODE,
-  UNAUTHORIZED_ERROR_STATUS_CODE,
-  NOT_FOUND_STATUS_CODE,
-  CONFLICT_REQUEST_STATUS_CODE,
-  INTERNAL_SERVER_ERROR_STATUS_CODE,
-} = require('../utils/errors');
+const { OK, CREATED } = require('../utils/status-code');
 const User = require('../models/user');
 const { generateToken, getIdFromToken } = require('../utils/token');
+const ErrorBadRequest = require('../errors/error-bad-request');
+const ErrorInternalServer = require('../errors/error-internal-server');
+const ErrorNotFound = require('../errors/error-not-found');
+const ErrorConflictRequest = require('../errors/error-conflict-request');
 
-function getUsers(_req, res) {
+function getUsers(_req, res, next) {
   User.find({})
-    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
-    .catch((err) => res
-      .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-      .send({ message: 'Ошибка на сервере, при запросе пользователей', err }));
+    .then((user) => res.status(OK).send({ data: user }))
+    .catch(() => next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователей')));
 }
 
-function getUser(req, res) {
+function getUser(req, res, next) {
   const { userId } = req.params;
   User.findById(userId)
-    .orFail(new Error('NotFoundId'))
-    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'NotFoundId') {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Пользователь с таким id не найден' });
+    .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
+    .then((user) => res.status(OK).send({ data: user }))
+    .catch((error) => {
+      if (error.statusCode === 404) {
+        return next(error);
       }
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      if (error.name === 'CastError') {
+        return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+      return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователя'));
     });
 }
 
-async function getCurrentUser(req, res) {
+function getCurrentUser(req, res, next) {
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
   User.findById(userId)
-    .orFail(new Error('NotFoundId'))
-    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'NotFoundId') {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Пользователь с таким id не найден' });
+    .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
+    .then((user) => res.status(OK).send({ data: user }))
+    .catch((error) => {
+      if (error.statusCode === 404) {
+        return next(error);
       }
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      if (error.name === 'CastError') {
+        return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+      return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователя'));
     });
 }
 
-function isUserDataGood(req, res) {
+function isUserDataGood(req) {
   if (!req.body) {
-    res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка тело запроса некорректно' });
     return false;
   }
 
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка, не заполнено поле email или password' });
     return false;
   }
   return true;
 }
 
 // eslint-disable-next-line consistent-return
-async function createUser(req, res) {
+async function createUser(req, res, next) {
   if (isUserDataGood(req, res)) {
     const { email, password } = req.body;
 
     try {
       const hash = await bcrypt.hash(password, 10);
       const user = await User.create({ email, password: hash });
-      return res.status(CREATED_STATUS_CODE).send({ message: 'Пользователь создан', user: { _id: user._id, email: user.email } });
-    } catch (err) {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+      return res.status(CREATED).send({ message: 'Пользователь создан', user: { _id: user._id, email: user.email } });
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
       }
-      if (err.keyValue.email) {
-        return res.status(CONFLICT_REQUEST_STATUS_CODE).send({ message: 'Ошибка данный email уже используется', err });
+      if (error.keyValue.email) {
+        return next(new ErrorConflictRequest(`Ошибка, email: «${email}» уже используется`));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при добавлении пользователя', err });
+      return new ErrorInternalServer('Ошибка на сервере, при запросе пользователей');
     }
+  } else {
+    return next(new ErrorBadRequest('Ошибка, в теле запроса проверте поле email или password'));
   }
 }
 
 // eslint-disable-next-line consistent-return
-function patchInfoUser(req, res) {
-  const userId = req.user._id;
+function patchInfoUser(req, res, next) {
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
   const { name, about } = req.body;
   if (name === undefined || about === undefined) {
-    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, неверные данные' });
+    return next(new ErrorBadRequest('Ошибка при вводе данных, неверные данные'));
   }
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
-    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+    .then((user) => res.status(OK).send({ data: user }))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+      return new ErrorInternalServer('Ошибка на сервере, при запросе пользователя');
     });
 }
 
 // eslint-disable-next-line consistent-return
-function patchAvatarUser(req, res) {
-  const userId = req.user._id;
+function patchAvatarUser(req, res, next) {
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
   const { avatar } = req.body;
   if (avatar === undefined) {
-    return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных, неверные данные' });
+    return next(new ErrorBadRequest('Ошибка при вводе данных, неверные данные'));
   }
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .orFail()
-    .then((user) => res.status(OK_STATUS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+    .then((user) => res.status(OK).send({ data: user }))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при запросе пользователя', err });
+      return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователя'));
     });
 }
 
 // eslint-disable-next-line consistent-return
-async function login(req, res) {
+async function login(req, res, next) {
   if (isUserDataGood(req, res)) {
     const { email, password } = req.body;
 
@@ -143,10 +129,15 @@ async function login(req, res) {
       const payload = { _id: user._id };
       const token = generateToken(payload);
       res.cookie('jwt', token);
-      return res.status(OK_STATUS_CODE).send({ message: 'Авторицазия успешна', user: payload });
+      return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
     } catch (error) {
-      res.status(UNAUTHORIZED_ERROR_STATUS_CODE).send({ message: 'Пользователь не найден', error });
+      if (error.statusCode === 400) {
+        return next(error);
+      }
+      return next(new ErrorBadRequest('Пользователь не найден'));
     }
+  } else {
+    return next(new ErrorBadRequest('Ошибка, в теле запроса проверте поле email или password'));
   }
 }
 

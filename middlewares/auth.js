@@ -1,21 +1,17 @@
-const { UNAUTHORIZED_ERROR_STATUS_CODE } = require('../utils/errors');
+const { ErrorUnauthorized } = require('../errors/error-unauthorized');
 const { checkToken } = require('../utils/token');
 
 // eslint-disable-next-line consistent-return
-const auth = (req, res, next) => {
+const auth = (req, _res, next) => {
   if (!req.cookies) {
-    return res
-      .status(UNAUTHORIZED_ERROR_STATUS_CODE)
-      .send({ message: 'Необходима авторизация' });
+    return next(new ErrorUnauthorized('Необходима авторизация'));
   }
 
   const token = req.cookies.jwt;
   const result = checkToken(token);
 
   if (!result) {
-    return res
-      .status(UNAUTHORIZED_ERROR_STATUS_CODE)
-      .send({ message: 'Необходима авторизация' });
+    return next(new ErrorUnauthorized('Необходима авторизация'));
   }
 
   next();
