@@ -1,8 +1,12 @@
-const { OK_STATUS_CODE } = require('../utils/errors');
-const { CREATED_STATUS_CODE } = require('../utils/errors');
-const { BAD_REQUEST_STATUS_CODE } = require('../utils/errors');
-const { NOT_FOUND_STATUS_CODE } = require('../utils/errors');
-const { INTERNAL_SERVER_ERROR_STATUS_CODE } = require('../utils/errors');
+const {
+  OK_STATUS_CODE,
+  CREATED_STATUS_CODE,
+  BAD_REQUEST_STATUS_CODE,
+  UNAUTHORIZED_ERROR_STATUS_CODE,
+  NOT_FOUND_STATUS_CODE,
+  INTERNAL_SERVER_ERROR_STATUS_CODE,
+} = require('../utils/errors');
+const { getIdFromToken } = require('../utils/token');
 
 const Card = require('../models/card');
 
@@ -14,10 +18,12 @@ function getCards(_req, res) {
       .send({ message: 'Ошибка на сервере, при запросе карточек', err }));
 }
 
-function createCard(req, res) {
+async function createCard(req, res) {
   const { name, link } = req.body;
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
 
-  Card.create({ name, link, owner: req.user._id })
+  Card.create({ name, link, owner: userId })
     .then((card) => res.status(CREATED_STATUS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -29,22 +35,35 @@ function createCard(req, res) {
     });
 }
 
-function deleteCard(req, res) {
+// eslint-disable-next-line consistent-return
+async function deleteCard(req, res) {
   const { cardId } = req.params;
-  Card.findByIdAndDelete(cardId)
-    .orFail(new Error('NotFoundId'))
-    .then((card) => res.send({ message: 'Карточка удалена', data: card }))
-    .catch((err) => {
-      if (err.message === 'NotFoundId') {
-        return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
-      }
-      if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
-        .send({ message: 'Ошибка на сервере, при запросе карточки', err });
-    });
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
+  const cardData = await Card.findById(cardId).lean();
+  const ownerId = cardData.owner.valueOf();
+
+  if (!ownerId) {
+    return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
+  }
+
+  if (userId === ownerId) {
+    await Card.findByIdAndDelete(cardId)
+      .orFail(new Error('NotFoundId'))
+      .then((card) => res.send({ message: 'Карточка удалена', data: card }))
+      .catch((err) => {
+        if (err.message === 'NotFoundId') {
+          return res.status(NOT_FOUND_STATUS_CODE).send({ message: 'Карточка с таким id не найдена' });
+        }
+        if (err.name === 'CastError') {
+          return res.status(BAD_REQUEST_STATUS_CODE).send({ message: 'Ошибка при вводе данных', err });
+        }
+        return res
+          .status(INTERNAL_SERVER_ERROR_STATUS_CODE)
+          .send({ message: 'Ошибка на сервере, при запросе карточки', err });
+      });
+  }
+  return res.status(UNAUTHORIZED_ERROR_STATUS_CODE).send({ message: 'Ошибка, запрещено удалять чужие карточки' });
 }
 
 function putLike(req, res) {

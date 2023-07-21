@@ -16,12 +16,6 @@ const app = express();
 
 app.use(helmet());
 app.use(express.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '64b128439a51a5026a724892',
-  };
-  next();
-});
 app.use(router);
 
 // eslint-disable-next-line no-console
