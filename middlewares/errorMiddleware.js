@@ -4,7 +4,7 @@ const ErrorNotFound = require('../errors/error-not-found');
 const ErrorUnauthorized = require('../errors/error-unauthorized');
 
 // eslint-disable-next-line consistent-return
-const errors = (error, _req, res, next) => {
+const errorMiddleware = (error, _req, res, next) => {
   if (error instanceof ErrorBadRequest) {
     return res
       .status(error.statusCode)
@@ -29,4 +29,4 @@ const errors = (error, _req, res, next) => {
   next();
 };
 
-module.exports = { errors };
+module.exports = { errorMiddleware };
