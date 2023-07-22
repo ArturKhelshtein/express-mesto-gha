@@ -8,22 +8,22 @@ const errors = (error, _req, res, next) => {
   if (error instanceof ErrorBadRequest) {
     return res
       .status(error.statusCode)
-      .send(error.message);
+      .send({ message: error.message });
   }
   if (error instanceof ErrorUnauthorized) {
     return res
       .status(error.statusCode)
-      .send(error.message);
+      .send({ message: error.message });
   }
   if (error instanceof ErrorNotFound) {
     return res
       .status(error.statusCode)
-      .send(error.message);
+      .send({ message: error.message });
   }
   if (error instanceof ErrorConflictRequest) {
     return res
       .status(error.statusCode)
-      .send(error.message);
+      .send({ message: error.message });
   }
 
   next();
