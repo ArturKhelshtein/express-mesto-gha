@@ -33,9 +33,9 @@ async function deleteCard(req, res, next) {
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
   const cardData = await Card.findById(cardId).lean();
-  const ownerId = cardData.owner.valueOf();
+  const ownerId = cardData?.owner.valueOf();
 
-  if (!ownerId) {
+  if ( !cardId || !cardData) {
     return next(new ErrorNotFound('Карточка с таким id не найдена'));
   }
 
