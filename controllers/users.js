@@ -62,11 +62,11 @@ function isUserDataGood(req) {
 // eslint-disable-next-line consistent-return
 async function createUser(req, res, next) {
   if (isUserDataGood(req, res)) {
-    const { email, password } = req.body;
+    const { email, password, name, about, avatar } = req.body;
 
     try {
       const hash = await bcrypt.hash(password, 10);
-      const user = await User.create({ email, password: hash });
+      const user = await User.create({ email, password: hash, name, about, avatar });
       return res.status(CREATED).send({
         message: 'Пользователь создан',
         user: {
