@@ -57,9 +57,11 @@ async function deleteCard(req, res, next) {
 }
 
 function putLike(req, res, next) {
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
+    { $addToSet: { likes: userId } },
     { new: true },
   )
     .orFail(new ErrorNotFound('Карточка с таким id не найден'))
@@ -76,9 +78,11 @@ function putLike(req, res, next) {
 }
 
 function deleteLike(req, res, next) {
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $pull: { likes: req.user._id } },
+    { $pull: { likes: userId } },
     { new: true },
   )
     .orFail(new ErrorNotFound('Карточка с таким id не найдена'))

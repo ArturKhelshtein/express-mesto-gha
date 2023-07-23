@@ -6,6 +6,7 @@ const ErrorBadRequest = require('../errors/error-bad-request');
 const ErrorInternalServer = require('../errors/error-internal-server');
 const ErrorNotFound = require('../errors/error-not-found');
 const ErrorConflictRequest = require('../errors/error-conflict-request');
+const ErrorUnauthorized = require('../errors/error-unauthorized');
 
 function getUsers(_req, res, next) {
   User.find({})
@@ -139,7 +140,7 @@ async function login(req, res, next) {
       if (error.statusCode === 400) {
         return next(error);
       }
-      return next(new ErrorBadRequest('Пользователь не найден'));
+      return next(new ErrorUnauthorized('Пользователь не найден'));
     }
   } else {
     return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
