@@ -1,4 +1,4 @@
-const { ErrorUnauthorized } = require('../errors/error-unauthorized');
+const ErrorUnauthorized = require('../errors/error-unauthorized');
 const { checkToken } = require('../utils/token');
 
 // eslint-disable-next-line consistent-return

@@ -142,7 +142,7 @@ async function login(req, res, next) {
       return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
     } catch (error) {
       if (error.statusCode === 400) {
-        return next(error);
+        return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
       }
       return next(new ErrorUnauthorized('Пользователь не найден'));
     }

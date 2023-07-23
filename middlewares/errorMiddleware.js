@@ -1,10 +1,10 @@
 const ErrorBadRequest = require('../errors/error-bad-request');
-const ErrorConflictRequest = require('../errors/error-conflict-request');
+const ErrorUnauthorized = require('../errors/error-unauthorized');
 const ErrorForbidden = require('../errors/error-forbidden');
 const ErrorNotFound = require('../errors/error-not-found');
-const ErrorUnauthorized = require('../errors/error-unauthorized');
+const ErrorConflictRequest = require('../errors/error-conflict-request');
 
-function returnError({ res, error }) {
+function errorReturn({ res, error }) {
   return res
     .status(error.statusCode)
     .send({ message: error.message });
@@ -13,19 +13,19 @@ function returnError({ res, error }) {
 // eslint-disable-next-line consistent-return
 const errorMiddleware = (error, _req, res, next) => {
   if (error instanceof ErrorBadRequest) {
-    returnError({ res, error });
+    errorReturn({ res, error });
   }
   if (error instanceof ErrorUnauthorized) {
-    returnError({ res, error });
+    errorReturn({ res, error });
   }
   if (error instanceof ErrorForbidden) {
-    returnError({ res, error });
+    errorReturn({ res, error });
   }
   if (error instanceof ErrorNotFound) {
-    returnError({ res, error });
+    errorReturn({ res, error });
   }
   if (error instanceof ErrorConflictRequest) {
-    returnError({ res, error });
+    errorReturn({ res, error });
   }
 
   next();
