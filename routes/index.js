@@ -2,7 +2,7 @@ const router = require('express').Router();
 const cookies = require('cookie-parser');
 const { errors } = require('celebrate');
 
-const { UNAUTHORIZED_ERROR } = require('../utils/status-code');
+const { NOT_FOUND } = require('../utils/status-code');
 const userRouter = require('./users');
 const cardRouter = require('./cards');
 const signInRouter = require('./signin');
@@ -23,7 +23,7 @@ router.use(errorMiddleware);
 
 router.use((req, res) => {
   res
-    .status(UNAUTHORIZED_ERROR)
+    .status(NOT_FOUND)
     .send({ message: `Ресурс по адресу ${req.path} не найден` });
 });
 

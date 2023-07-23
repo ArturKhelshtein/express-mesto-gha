@@ -4,7 +4,7 @@ const Card = require('../models/card');
 const ErrorInternalServer = require('../errors/error-internal-server');
 const ErrorBadRequest = require('../errors/error-bad-request');
 const ErrorNotFound = require('../errors/error-not-found');
-const ErrorUnauthorized = require('../errors/error-unauthorized');
+const ErrorForbidden = require('../errors/error-forbidden');
 
 function getCards(_req, res, next) {
   Card.find({})
@@ -35,7 +35,7 @@ async function deleteCard(req, res, next) {
   const cardData = await Card.findById(cardId).lean();
   const ownerId = cardData?.owner.valueOf();
 
-  if ( !cardId || !cardData) {
+  if (!cardId || !cardData) {
     return next(new ErrorNotFound('Карточка с таким id не найдена'));
   }
 
@@ -53,7 +53,7 @@ async function deleteCard(req, res, next) {
         return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
       });
   }
-  return next(new ErrorUnauthorized('Ошибка, запрещено удалять чужие карточки'));
+  return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
 }
 
 function putLike(req, res, next) {
