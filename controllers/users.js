@@ -67,7 +67,12 @@ async function createUser(req, res, next) {
     try {
       const hash = await bcrypt.hash(password, 10);
       const user = await User.create({ email, password: hash });
-      return res.status(CREATED).send({ message: 'Пользователь создан', user: { _id: user._id, email: user.email } });
+      return res.status(CREATED).send({
+        message: 'Пользователь создан',
+        user: {
+          _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
+        },
+      });
     } catch (error) {
       if (error.name === 'ValidationError') {
         return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
@@ -137,7 +142,7 @@ async function login(req, res, next) {
       return next(new ErrorBadRequest('Пользователь не найден'));
     }
   } else {
-    return next(new ErrorBadRequest('Ошибка, в теле запроса проверте поле email или password'));
+    return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
   }
 }
 
