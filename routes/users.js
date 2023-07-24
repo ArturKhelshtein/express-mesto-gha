@@ -8,6 +8,7 @@ const {
   patchInfoUser,
   patchAvatarUser,
 } = require('../controllers/users');
+const { regexInt16, regexUrl } = require('../utils/regexp');
 
 router.get('/', getUsers);
 
@@ -16,7 +17,7 @@ router.get('/me', getCurrentUser);
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
     userId: Joi.string().required().min(24).max(24)
-      .pattern(/[a-f0-9]*/),
+      .pattern(regexInt16),
   }),
 }), getUser);
 
@@ -29,7 +30,7 @@ router.patch('/me', celebrate({
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().pattern(/^https?:\/\/[www.]?[-a-zA-Z0-9+&@/?=~_!:,.;()*'$\][]*#?/),
+    avatar: Joi.string().required().pattern(regexUrl),
   }),
 }), patchAvatarUser);
 

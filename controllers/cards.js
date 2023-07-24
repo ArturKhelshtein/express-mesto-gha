@@ -51,8 +51,9 @@ async function deleteCard(req, res, next) {
           return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
         });
     }
-  } catch (error) {
     return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
+  } catch (error) {
+    return next(new ErrorNotFound('Карточка с таким id не найдена'));
   }
 }
 
