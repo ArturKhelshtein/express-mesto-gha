@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { OK, CREATED } = require('../utils/status-code');
 const User = require('../models/user');
-const { generateToken, getIdFromToken } = require('../utils/token');
+const { generateToken } = require('../utils/token');
 const ErrorBadRequest = require('../errors/error-bad-request');
 const ErrorInternalServer = require('../errors/error-internal-server');
 const ErrorNotFound = require('../errors/error-not-found');
