@@ -71,7 +71,7 @@ function putLike(req, res, next) {
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return next(new ErrorInternalServer('Ошибка на сервере, при добавлении лайка'));
+      return next(new ErrorNotFound('Карточка с таким id не найдена'));
     });
 }
 
@@ -89,7 +89,7 @@ function deleteLike(req, res, next) {
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return next(new ErrorInternalServer('Ошибка на сервере, при удалении лайка'));
+      return next(new ErrorNotFound('Карточка с таким id не найдена'));
     });
 }
 
