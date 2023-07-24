@@ -1,5 +1,4 @@
 const { OK, CREATED } = require('../utils/status-code');
-const { getIdFromToken } = require('../utils/token');
 const Card = require('../models/card');
 const ErrorInternalServer = require('../errors/error-internal-server');
 const ErrorBadRequest = require('../errors/error-bad-request');
@@ -14,8 +13,7 @@ function getCards(_req, res, next) {
 
 function createCard(req, res, next) {
   const { name, link } = req.body;
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
 
   Card.create({ name, link, owner: userId })
     .then((card) => res.status(CREATED).send({ data: card }))
@@ -30,8 +28,7 @@ function createCard(req, res, next) {
 // eslint-disable-next-line consistent-return
 async function deleteCard(req, res, next) {
   const { cardId } = req.params;
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
   try {
     const cardData = await Card.findById(cardId).lean();
     const ownerId = cardData?.owner.valueOf();
@@ -58,8 +55,7 @@ async function deleteCard(req, res, next) {
 }
 
 function putLike(req, res, next) {
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: userId } },
@@ -76,8 +72,7 @@ function putLike(req, res, next) {
 }
 
 function deleteLike(req, res, next) {
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: userId } },

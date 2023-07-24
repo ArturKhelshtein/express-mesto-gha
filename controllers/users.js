@@ -32,8 +32,7 @@ function getUser(req, res, next) {
 }
 
 function getCurrentUser(req, res, next) {
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
 
   User.findById(userId)
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
@@ -79,8 +78,7 @@ async function createUser(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 function patchInfoUser(req, res, next) {
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
@@ -95,8 +93,7 @@ function patchInfoUser(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 function patchAvatarUser(req, res, next) {
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
+  const { userId } = req.user;
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
