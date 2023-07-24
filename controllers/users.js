@@ -14,16 +14,11 @@ function getUsers(_req, res, next) {
     .catch(() => next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователей')));
 }
 
-function getUser(req, res, next) {
-  const { userId } = req.params;
-
+function findUser(req, res, next, userId) {
   User.findById(userId)
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -31,21 +26,16 @@ function getUser(req, res, next) {
     });
 }
 
+function getUser(req, res, next) {
+  const { userId } = req.params;
+
+  findUser(req, res, next, userId);
+}
+
 function getCurrentUser(req, res, next) {
   const { userId } = req.user;
 
-  User.findById(userId)
-    .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
-    .then((user) => res.status(OK).send({ data: user }))
-    .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
-      if (error.name === 'CastError') {
-        return next(new ErrorBadRequest('Ошибка при вводе данных'));
-      }
-      return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователя'));
-    });
+  findUser(req, res, next, userId);
 }
 
 // eslint-disable-next-line consistent-return
@@ -118,9 +108,6 @@ async function login(req, res, next) {
     res.cookie('jwt', token);
     return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
   } catch (error) {
-    if (error.statusCode === 400) {
-      return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
-    }
     return next(new ErrorUnauthorized('Пользователь не найден'));
   }
 }

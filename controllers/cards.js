@@ -21,7 +21,7 @@ function createCard(req, res, next) {
       if (error.name === 'ValidationError') {
         return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
       }
-      return next(new ErrorInternalServer('Ошибка на сервере, при добавлении карточки'));
+      return next(error);
     });
 }
 
@@ -45,12 +45,12 @@ async function deleteCard(req, res, next) {
           if (error.name === 'CastError') {
             return next(new ErrorBadRequest('Ошибка при вводе данных'));
           }
-          return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
+          return next(error);
         });
     }
     return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
   } catch (error) {
-    return next(new ErrorNotFound('Карточка с таким id не найдена'));
+    return next(error);
   }
 }
 
@@ -67,7 +67,7 @@ function putLike(req, res, next) {
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return next(new ErrorNotFound('Карточка с таким id не найдена'));
+      return next(error);
     });
 }
 
@@ -84,7 +84,7 @@ function deleteLike(req, res, next) {
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
-      return next(new ErrorNotFound('Карточка с таким id не найдена'));
+      return next(error);
     });
 }
 
