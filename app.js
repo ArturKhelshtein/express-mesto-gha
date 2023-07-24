@@ -18,17 +18,17 @@ const app = express();
 
 app.use(helmet());
 app.use(express.json());
-router.use(cookies());
+app.use(cookies());
 app.use(router);
 
-router.use(errors());
-router.use(errorMiddleware);
+app.use(errors());
+app.use(errorMiddleware);
 
-router.use((req, res) => {
-  res
-    .status(NOT_FOUND)
-    .send({ message: `Ресурс по адресу ${req.path} не найден` });
-});
+// app.use((req, res) => {
+//   res
+//     .status(NOT_FOUND)
+//     .send({ message: `Ресурс по адресу ${req.path} не найден` });
+// });
 
 // eslint-disable-next-line no-console
 app.listen(PORT, () => console.log(`Application is running on port ${PORT}`));
