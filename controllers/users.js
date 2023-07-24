@@ -19,6 +19,9 @@ function findUser(req, res, next, userId) {
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
+      if (error.statusCode === 404) {
+        return next(error);
+      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
