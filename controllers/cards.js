@@ -30,30 +30,35 @@ function createCard(req, res, next) {
 // eslint-disable-next-line consistent-return
 async function deleteCard(req, res, next) {
   const { cardId } = req.params;
-  const token = req.cookies.jwt;
-  const userId = getIdFromToken(token);
-  const cardData = await Card.findById(cardId).lean();
-  const ownerId = cardData?.owner.valueOf();
 
-  if (!cardId || !cardData) {
+  if (!cardId) {
     return next(new ErrorNotFound('Карточка с таким id не найдена'));
   }
 
-  if (userId === ownerId) {
-    await Card.findByIdAndDelete(cardId)
-      .orFail(new ErrorNotFound('Карточка с таким id не найдена'))
-      .then((card) => res.send({ message: 'Карточка удалена', data: card }))
-      .catch((error) => {
-        if (error.statusCode === 404) {
-          return next(error);
-        }
-        if (error.name === 'CastError') {
-          return next(new ErrorBadRequest('Ошибка при вводе данных'));
-        }
-        return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
-      });
+  const token = req.cookies.jwt;
+  const userId = getIdFromToken(token);
+  try {
+    const cardData = await Card.findById(cardId).lean();
+    const ownerId = cardData?.owner.valueOf();
+
+    if (userId === ownerId) {
+      await Card.findByIdAndDelete(cardId)
+        .orFail(new ErrorNotFound('Карточка с таким id не найдена'))
+        .then((card) => res.send({ message: 'Карточка удалена', data: card }))
+        .catch((error) => {
+          if (error.statusCode === 404) {
+            return next(error);
+          }
+          if (error.name === 'CastError') {
+            return next(new ErrorBadRequest('Ошибка при вводе данных'));
+          }
+          return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
+        });
+    }
+    return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
+  } catch (error) {
+    return next(new ErrorNotFound('Карточка с таким id не найдена'));
   }
-  return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
 }
 
 function putLike(req, res, next) {

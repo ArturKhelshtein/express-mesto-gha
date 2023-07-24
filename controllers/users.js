@@ -20,9 +20,6 @@ function getUser(req, res, next) {
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -37,9 +34,6 @@ function getCurrentUser(req, res, next) {
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -73,7 +67,6 @@ async function createUser(req, res, next) {
         email, password: hash, name, about, avatar,
       });
       return res.status(CREATED).send({
-        // message: 'Пользователь создан',
         user: {
           _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
         },
@@ -136,7 +129,13 @@ async function login(req, res, next) {
 
     try {
       const user = await User.findUserByCredentials(email, password);
-      const payload = { _id: user._id };
+      const payload = {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+      };
       const token = generateToken(payload);
       res.cookie('jwt', token);
       return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });

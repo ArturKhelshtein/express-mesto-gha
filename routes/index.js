@@ -10,8 +10,8 @@ const signUpRouter = require('./signup');
 const { auth } = require('../middlewares/auth');
 const { errorMiddleware } = require('../middlewares/errorMiddleware');
 
-router.use('/signin', signInRouter);
 router.use('/signup', signUpRouter);
+router.use('/signin', signInRouter);
 
 router.use(cookies());
 router.use(auth);
