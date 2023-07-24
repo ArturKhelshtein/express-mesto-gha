@@ -30,16 +30,15 @@ function createCard(req, res, next) {
 // eslint-disable-next-line consistent-return
 async function deleteCard(req, res, next) {
   const { cardId } = req.params;
-
-  if (!cardId) {
-    return next(new ErrorNotFound('Карточка с таким id не найдена'));
-  }
-
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
   try {
     const cardData = await Card.findById(cardId).lean();
     const ownerId = cardData?.owner.valueOf();
+
+    if (!cardId || !cardData) {
+      return next(new ErrorNotFound('Карточка с таким id не найдена'));
+    }
 
     if (userId === ownerId) {
       await Card.findByIdAndDelete(cardId)
@@ -52,9 +51,8 @@ async function deleteCard(req, res, next) {
           return next(new ErrorInternalServer('Ошибка на сервере, при запросе карточки'));
         });
     }
-    return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
   } catch (error) {
-    return next(new ErrorNotFound('Карточка с таким id не найдена'));
+    return next(new ErrorForbidden('Ошибка, запрещено удалять чужие карточки'));
   }
 }
 

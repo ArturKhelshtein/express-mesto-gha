@@ -7,6 +7,7 @@ const userRouter = require('./users');
 const cardRouter = require('./cards');
 const signInRouter = require('./signin');
 const signUpRouter = require('./signup');
+const signOutRouter = require('./signout');
 const { auth } = require('../middlewares/auth');
 const { errorMiddleware } = require('../middlewares/errorMiddleware');
 
@@ -17,6 +18,7 @@ router.use(cookies());
 router.use(auth);
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
+router.use('/signout', signOutRouter);
 
 router.use(errors());
 router.use(errorMiddleware);

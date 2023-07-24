@@ -16,10 +16,14 @@ function getUsers(_req, res, next) {
 
 function getUser(req, res, next) {
   const { userId } = req.params;
+
   User.findById(userId)
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
+      if (error.statusCode === 404) {
+        return next(error);
+      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -30,10 +34,14 @@ function getUser(req, res, next) {
 function getCurrentUser(req, res, next) {
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
+
   User.findById(userId)
     .orFail(new ErrorNotFound('Пользователь с таким id не найден'))
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
+      if (error.statusCode === 404) {
+        return next(error);
+      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -53,6 +61,7 @@ async function createUser(req, res, next) {
       email, password: hash, name, about, avatar,
     });
     return res.status(CREATED).send({
+      // message: 'Пользователь создан',
       user: {
         _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
       },
@@ -64,7 +73,7 @@ async function createUser(req, res, next) {
     if (error.keyValue.email) {
       return next(new ErrorConflictRequest(`Ошибка, email: «${email}» уже используется`));
     }
-    return new ErrorInternalServer('Ошибка на сервере, при запросе пользователей');
+    return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователей'));
   }
 }
 
@@ -73,16 +82,14 @@ function patchInfoUser(req, res, next) {
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
   const { name, about } = req.body;
-  if (name === undefined || about === undefined) {
-    return next(new ErrorBadRequest('Ошибка при вводе данных, неверные данные'));
-  }
+
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .then((user) => res.status(OK).send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
       }
-      return new ErrorInternalServer('Ошибка на сервере, при запросе пользователя');
+      return next(new ErrorInternalServer('Ошибка на сервере, при запросе пользователя'));
     });
 }
 
@@ -91,9 +98,7 @@ function patchAvatarUser(req, res, next) {
   const token = req.cookies.jwt;
   const userId = getIdFromToken(token);
   const { avatar } = req.body;
-  if (avatar === undefined) {
-    return next(new ErrorBadRequest('Ошибка при вводе данных, неверные данные'));
-  }
+
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .orFail()
     .then((user) => res.status(OK).send({ data: user }))
@@ -111,13 +116,7 @@ async function login(req, res, next) {
 
   try {
     const user = await User.findUserByCredentials(email, password);
-    const payload = {
-      _id: user._id,
-      email: user.email,
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-    };
+    const payload = { _id: user._id };
     const token = generateToken(payload);
     res.cookie('jwt', token);
     return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
@@ -129,6 +128,10 @@ async function login(req, res, next) {
   }
 }
 
+function logout(_req, res) {
+  return res.clearCookie('jwt').send({ message: 'Выполнен выход из системы' });
+}
+
 module.exports = {
   getUsers,
   getUser,
@@ -137,4 +140,5 @@ module.exports = {
   patchInfoUser,
   patchAvatarUser,
   login,
+  logout,
 };
