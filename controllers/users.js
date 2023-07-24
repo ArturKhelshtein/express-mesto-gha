@@ -41,47 +41,30 @@ function getCurrentUser(req, res, next) {
     });
 }
 
-function isUserDataGood(req) {
-  if (!req.body) {
-    return false;
-  }
-
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return false;
-  }
-  return true;
-}
-
 // eslint-disable-next-line consistent-return
 async function createUser(req, res, next) {
-  if (isUserDataGood(req, res)) {
-    const {
-      email, password, name, about, avatar,
-    } = req.body;
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
 
-    try {
-      const hash = await bcrypt.hash(password, 10);
-      const user = await User.create({
-        email, password: hash, name, about, avatar,
-      });
-      return res.status(CREATED).send({
-        user: {
-          _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
-        },
-      });
-    } catch (error) {
-      if (error.name === 'ValidationError') {
-        return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
-      }
-      if (error.keyValue.email) {
-        return next(new ErrorConflictRequest(`Ошибка, email: «${email}» уже используется`));
-      }
-      return new ErrorInternalServer('Ошибка на сервере, при запросе пользователей');
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      email, password: hash, name, about, avatar,
+    });
+    return res.status(CREATED).send({
+      user: {
+        _id: user._id, email: user.email, name: user.name, about: user.about, avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return next(new ErrorBadRequest(`Ошибка при вводе данных: ${error}`));
     }
-  } else {
-    return next(new ErrorBadRequest('Ошибка, в теле запроса проверте поле email или password'));
+    if (error.keyValue.email) {
+      return next(new ErrorConflictRequest(`Ошибка, email: «${email}» уже используется`));
+    }
+    return new ErrorInternalServer('Ошибка на сервере, при запросе пользователей');
   }
 }
 
@@ -124,29 +107,25 @@ function patchAvatarUser(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 async function login(req, res, next) {
-  if (isUserDataGood(req, res)) {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-      const user = await User.findUserByCredentials(email, password);
-      const payload = {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-      };
-      const token = generateToken(payload);
-      res.cookie('jwt', token);
-      return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
-    } catch (error) {
-      if (error.statusCode === 400) {
-        return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
-      }
-      return next(new ErrorUnauthorized('Пользователь не найден'));
+  try {
+    const user = await User.findUserByCredentials(email, password);
+    const payload = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+    };
+    const token = generateToken(payload);
+    res.cookie('jwt', token);
+    return res.status(OK).send({ message: 'Авторицазия успешна', user: payload });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
     }
-  } else {
-    return next(new ErrorBadRequest('Ошибка, в теле запроса проверьте поле email или password'));
+    return next(new ErrorUnauthorized('Пользователь не найден'));
   }
 }
 

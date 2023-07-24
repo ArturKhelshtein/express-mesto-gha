@@ -46,9 +46,6 @@ async function deleteCard(req, res, next) {
         .orFail(new ErrorNotFound('Карточка с таким id не найдена'))
         .then((card) => res.send({ message: 'Карточка удалена', data: card }))
         .catch((error) => {
-          if (error.statusCode === 404) {
-            return next(error);
-          }
           if (error.name === 'CastError') {
             return next(new ErrorBadRequest('Ошибка при вводе данных'));
           }
@@ -72,9 +69,6 @@ function putLike(req, res, next) {
     .orFail(new ErrorNotFound('Карточка с таким id не найден'))
     .then((likes) => res.send({ message: 'Лайк добавлен ♡', data: likes }))
     .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
@@ -93,9 +87,6 @@ function deleteLike(req, res, next) {
     .orFail(new ErrorNotFound('Карточка с таким id не найдена'))
     .then((likes) => res.send({ message: 'Лайк удален ಠ_ಠ', data: likes }))
     .catch((error) => {
-      if (error.statusCode === 404) {
-        return next(error);
-      }
       if (error.name === 'CastError') {
         return next(new ErrorBadRequest('Ошибка при вводе данных'));
       }
