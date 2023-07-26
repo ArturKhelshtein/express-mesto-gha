@@ -13,7 +13,7 @@ function getCards(_req, res, next) {
 
 function createCard(req, res, next) {
   const { name, link } = req.body;
-  const { userId } = req.user;
+  const userId = req.user._id;
 
   Card.create({ name, link, owner: userId })
     .then((card) => res.status(CREATED).send({ data: card }))
@@ -28,7 +28,7 @@ function createCard(req, res, next) {
 // eslint-disable-next-line consistent-return
 async function deleteCard(req, res, next) {
   const { cardId } = req.params;
-  const { userId } = req.user;
+  const userId = req.user._id;
   try {
     const cardData = await Card.findById(cardId).lean();
     const ownerId = cardData?.owner.valueOf();
@@ -55,7 +55,7 @@ async function deleteCard(req, res, next) {
 }
 
 function putLike(req, res, next) {
-  const { userId } = req.user;
+  const userId = req.user._id;
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: userId } },
@@ -72,7 +72,7 @@ function putLike(req, res, next) {
 }
 
 function deleteLike(req, res, next) {
-  const { userId } = req.user;
+  const userId = req.user._id;
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: userId } },
