@@ -36,7 +36,7 @@ function getUser(req, res, next) {
 }
 
 function getCurrentUser(req, res, next) {
-  const { userId } = req.user;
+  const userId = req.user._id;
 
   findUser(req, res, next, userId);
 }
@@ -71,7 +71,7 @@ async function createUser(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 function patchInfoUser(req, res, next) {
-  const { userId } = req.user;
+  const userId = req.user._id;
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
@@ -86,7 +86,7 @@ function patchInfoUser(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 function patchAvatarUser(req, res, next) {
-  const { userId } = req.user;
+  const userId = req.user._id;
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
